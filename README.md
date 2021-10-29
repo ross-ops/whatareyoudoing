@@ -7,6 +7,9 @@ This effectively means this will trigger when you first open your terminal, or a
 Run `./install.sh` and re-source your shell config, and you're cooking.
 
 TODO:
+
     - icon doesn't work
+   
     - some integration with WRMS may be possible (tks)
+   
     - if left running, would like to quit if day rolls
