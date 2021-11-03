@@ -1,10 +1,42 @@
 #!/bin/sh
 
+usage() {
+    echo "usage: $0 [exit]"
+    echo "Run with no arguments for standard runmode"
+    echo "Run with \`exit\` to exit WAYD and clean up"
+    exit 1
+}
+
 # Get a datestamp
 dstamp=$(date +%y%m%d)
 
 # Set lockfile 
 lockfile="$HOME/.whatareyoudoing/lock-${dstamp}"
+
+# Runs if the `exit` arg is passed
+# Kills running WAYD processes and cleans lockfile
+run_exit() {
+    process_id=$(/bin/ps -fu "$USER"| grep "/bin/sh /usr/local/bin/whatareyoudoing" | grep -v "grep" | awk '{print $2}')
+    rm -rf "$lockfile"
+    echo "Quitting WAYD"
+    kill -9 ${process_id}
+    exit 0
+}
+
+# Handle rogue args
+if [ "$#" -gt 1 ]; then
+  usage
+fi
+
+# Handle help/malformed args
+if [ "$#" -eq 1 ] && [ $1 != "exit" ]; then
+    usage
+fi
+
+# Handle exit arg being passed
+if [ "$#" -eq 1 ] && [ "$1" = "exit" ]; then
+    run_exit
+fi
 
 # If lockfile does not exist, create it.
 # Else, exit because script is already running. 
