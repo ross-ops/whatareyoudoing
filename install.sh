@@ -60,6 +60,7 @@ config_dir="$home/.whatareyoudoing"
 
 if [ ! -d "$config_dir" ] && [ $? ]; then
     mkdir "$config_dir"
+    chown "$(logname)":"$(logname)" "$config_dir"
 fi
 
 # Allow runner to be added to shell rc
