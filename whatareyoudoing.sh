@@ -105,14 +105,14 @@ test_cancel() {
 config_ts_location=$(ini_parser timesheet location "$config_file")
 
 # If theres a ts location in config, use it, else default
-if [ -n "${config_ts_location}"]; then
-    $ts_location="HOME/timesheets"
+if [ -z "${config_ts_location}" ]; then
+    ts_location="$HOME/timesheets"
 else
-    $ts_location="${config_ts_location}"
+    ts_location="${config_ts_location}"
 fi
 
 # Ask where you want timesheets saved
-timesheet_location=$(zenity_text "Where would you like to write your timesheet files? Default: $HOME/timesheets" $ts_location)
+timesheet_location=$(zenity_text "Where would you like to write your timesheet files? Default: $HOME/timesheets" "$ts_location")
 
 # See if last popup was 'canceled'
 test_cancel "$timesheet_location"
@@ -148,10 +148,10 @@ fi
 config_ts_freq=$(ini_parser timesheet frequency "$config_file")
 
 # If theres a ts location in config, use it, else default
-if [ -n "${config_ts_freq}"]; then
-    $ts_freq="15"
+if [ -z "${config_ts_freq}" ]; then
+    ts_freq="15"
 else
-    $ts_freq="${config_ts_freq}"
+    ts_freq="${config_ts_freq}"
 fi
 # Ask how often you want to be prompted
 frequency=$(zenity_text "How often should I ask you (in minutes)?" "${ts_freq}")
