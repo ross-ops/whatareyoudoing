@@ -154,7 +154,7 @@ else
     $ts_freq="${config_ts_freq}"
 fi
 # Ask how often you want to be prompted
-frequency=$(zenity_text "How often should I ask you (in minutes)? Default: 15" "${ts_freq}")
+frequency=$(zenity_text "How often should I ask you (in minutes)?" "${ts_freq}")
 
 # See if last popup was 'canceled'
 test_cancel "$frequency"
