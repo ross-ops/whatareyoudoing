@@ -13,14 +13,42 @@ dstamp=$(date +%y%m%d)
 # Set lockfile 
 lockfile="$HOME/.whatareyoudoing/lock-${dstamp}"
 
+# Set config file
+config_file="$HOME/.whatareyoudoing/config"
+
+# Test config file exists or make one
+if [ ! -f "$config_file" ]; then
+    touch "$config_file"
+fi
+
+ini_parser() {
+    sed -nr "/^\[$1\]/ { :l /^$2[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" "$3"
+}
+
+# Existing timesheet file
+active_ts=$(ini_parser timesheet active_timesheet "$config_file")
+
 # Runs if the `exit` arg is passed
 # Kills running WAYD processes and cleans lockfile
 run_exit() {
-    process_id=$(/bin/ps -fu "$USER"| grep "/bin/sh /usr/local/bin/whatareyoudoing" | grep -v "grep" | awk '{print $2}')
-    rm -rf "$lockfile"
-    echo "Quitting WAYD"
-    kill -9 ${process_id}
-    exit 0
+    if [ -f "$lockfile" ]; then
+        process_id=$(/bin/ps -fu "$USER"| grep "whatareyoudoing" | grep -v "grep" | awk '{print $2}')
+        # rm the lockfile so the next time wayd is run, it knows that there's not a version  already running
+        rm -rf "$lockfile"
+        echo "Quitting WAYD"
+        # Get most recent timesheet output
+        if [ -n "$active_ts" ]; then
+            echo "Most recent timesheet at ${active_ts}"
+        fi
+        # kill processes running this script
+        for i in ${process_id}; do
+            kill -9 "$i"
+        done
+        exit 0
+    else
+        echo "WAYD not running"
+        exit 0
+    fi
 }
 
 # Handle rogue args
@@ -29,7 +57,7 @@ if [ "$#" -gt 1 ]; then
 fi
 
 # Handle help/malformed args
-if [ "$#" -eq 1 ] && [ $1 != "exit" ]; then
+if [ "$#" -eq 1 ] && [ "$1" != "exit" ]; then
     usage
 fi
 
@@ -73,8 +101,18 @@ test_cancel() {
 }
 
 
+# Config ts location
+config_ts_location=$(ini_parser timesheet location "$config_file")
+
+# If theres a ts location in config, use it, else default
+if [ -n "${config_ts_location}"]; then
+    $ts_location="HOME/timesheets"
+else
+    $ts_location="${config_ts_location}"
+fi
+
 # Ask where you want timesheets saved
-timesheet_location=$(zenity_text "Where would you like to write your timesheet files? Default:" "$HOME/timesheets")
+timesheet_location=$(zenity_text "Where would you like to write your timesheet files? Default: $HOME/timesheets" $ts_location)
 
 # See if last popup was 'canceled'
 test_cancel "$timesheet_location"
@@ -86,6 +124,11 @@ fi
 
 # Set timesheet file
 timesheet="$timesheet_location/timesheet-$dstamp"
+
+# Update config file
+echo "[timesheet]" > "$config_file"
+echo "location=$timesheet_location" >> "$config_file"
+echo "active_timesheet=$timesheet" >> "$config_file"
 
 # What you _were_ doing
 wywd=""
@@ -101,8 +144,17 @@ else
     wywd=$(tail -n1 "$timesheet" | sed -r 's/^[0-9]{2}:[0-9]{2}:[0-9]{2}\s//')
 fi
 
+# Config ts frerquency
+config_ts_freq=$(ini_parser timesheet frequency "$config_file")
+
+# If theres a ts location in config, use it, else default
+if [ -n "${config_ts_freq}"]; then
+    $ts_freq="15"
+else
+    $ts_freq="${config_ts_freq}"
+fi
 # Ask how often you want to be prompted
-frequency=$(zenity_text "How often should I ask you (in minutes)? Default:" "15")
+frequency=$(zenity_text "How often should I ask you (in minutes)? Default: 15" "${ts_freq}")
 
 # See if last popup was 'canceled'
 test_cancel "$frequency"
@@ -111,6 +163,9 @@ test_cancel "$frequency"
 if [ -z "$frequency" ]; then
     frequency=15
 fi
+
+# update config files
+echo "frequency=$frequency" >> "$config_file"
 
 # Get frequency in seconds for sleep
 frequency_secs=$((frequency * 60))
