@@ -17,7 +17,8 @@ home="/home/$(logname)"
 shell=$(su - "$(logname)" -c env | grep 'SHELL' | sed 's/SHELL\=//')
 
 # Install locations for script and icon
-icon="$home/.local/share/icons/720x720-WAYD.png"
+icon_dir="$home/.local/share/icons/"
+icon="${icon_dir}/720x720-WAYD.png"
 install_location="/usr/local/bin/whatareyoudoing"
 
 
@@ -37,6 +38,11 @@ hash_compare() {
 
 echo "${GREEN}Installing What Are You Doing${NC}"
 echo ""
+
+# If icon directory is not present, then create it
+if [ ! -d "$icon_dir" ]; then
+    mkdir -p "$icon_dir"
+fi
 
 # If icon is not installed or new version is available, install it
 if [ ! -f "$icon" ] || hash_compare "$(pwd)/WAYD.png" "$icon"; then
