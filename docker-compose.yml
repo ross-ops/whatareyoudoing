@@ -1,0 +1,11 @@
+version: "3.3"  # optional since v1.27.0
+services:
+
+  test21.04:
+    build: ./docker
+    environment:
+      LANG: C.UTF-8
+    stdin_open: true
+    tty: true
+    volumes: 
+      - ./:/wayd/
