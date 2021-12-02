@@ -4,8 +4,10 @@ services:
   test21.04:
     build: ./docker
     environment:
-      LANG: C.UTF-8
+      - LANG=C.UTF-8
+      - DISPLAY=${DISPLAY}
     stdin_open: true
     tty: true
     volumes: 
       - ./:/wayd/
+      - /tmp/.X11-unix:/tmp/.X11-unix
